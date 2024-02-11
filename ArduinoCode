@@ -1,0 +1,126 @@
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include <string.h>
+#include<Servo.h>
+
+#define RPM_SENSOR1 18 // Pin, do którego podłączony jest czujnik TCRT5000 nr.1
+#define RPM_SENSOR2 19 // Pin, do którego podłączony jest czujnik TCRT5000 nr.2
+#define RPM_SENSOR3 20 // Pin, do którego podłączony jest czujnik TCRT5000 nr.3
+#define RPM_SENSOR4 21 // Pin, do którego podłączony jest czujnik TCRT5000 nr.4
+
+#define TEMP_SENSOR1 11 // Pin czujnika DS18B20 nr.1
+#define TEMP_SENSOR2 12 // Pin czujnika DS18B20 nr.2
+
+#define CURRENTSENSING A2 // Pin od natężenia
+#define VOLTAGESENSING A3 // Pin od napięcia
+
+
+volatile int rpm1count;
+volatile int rpm2count;
+volatile int rpm3count;
+volatile int rpm4count;
+unsigned long lastmillis = 0;
+unsigned long rpm;
+int frequency = 500;
+float rpm1, rpm2, rpm3, rpm4;
+
+OneWire oneWire(TEMP_SENSOR1);
+DallasTemperature sensors(&oneWire);
+
+void engineControl(String input){
+  int engineNum = input.substring(16.17).toInt();
+  int speed = input.substring(18).toInt();
+
+  //sterowanie silnikami
+}
+
+float rpm_counting(int rpmcount)
+{
+  rpm = (rpmcount * 60);
+  return rpm;
+}
+
+void rpm_fun1()
+{
+  rpm1count++;
+}
+
+void rpm_fun2()
+{
+  rpm2count++;
+}
+
+void rpm_fun3()
+{
+  rpm3count++;
+}
+
+void rpm_fun4()
+{
+  rpm4count++;
+}
+
+void setup()
+{
+  Serial.begin(38400);
+  pinMode(RPM_SENSOR1, INPUT);
+  pinMode(RPM_SENSOR2, INPUT);
+  pinMode(RPM_SENSOR3, INPUT);
+  pinMode(RPM_SENSOR4, INPUT);
+
+  // Tylko jeżeli korzysta z przerwań
+  attachInterrupt(digitalPinToInterrupt(RPM_SENSOR1), rpm_fun1, FALLING);
+  attachInterrupt(digitalPinToInterrupt(RPM_SENSOR2), rpm_fun2, FALLING);
+  attachInterrupt(digitalPinToInterrupt(RPM_SENSOR3), rpm_fun3, FALLING);
+  attachInterrupt(digitalPinToInterrupt(RPM_SENSOR4), rpm_fun4, FALLING);
+
+  sensors.begin();
+}
+
+void loop()
+{
+
+
+  sensors.requestTemperatures();             // Wywołanie odczytu temperatury
+  float tempC = sensors.getTempCByIndex(0);  // Odczytanie temperatury czujnika
+  float tempCBattery = sensors.getTempCByIndex(1);
+
+    if (millis() - lastmillis >= frequency) // Obliczanie RPM co czestotliwosc
+    { 
+      detachInterrupt(digitalPinToInterrupt(RPM_SENSOR1));
+      detachInterrupt(digitalPinToInterrupt(RPM_SENSOR2));
+      detachInterrupt(digitalPinToInterrupt(RPM_SENSOR3));
+      detachInterrupt(digitalPinToInterrupt(RPM_SENSOR4));
+      Serial.print("*");
+      Serial.print(rpm_counting(rpm1count));
+      Serial.print(";");
+      Serial.print(rpm_counting(rpm2count));
+      Serial.print(";");
+      Serial.print(rpm_counting(rpm3count));
+      Serial.print(";");
+      Serial.print(rpm_counting(rpm4count));
+      Serial.print(";");
+      if (tempC == -127){
+          tempC=0;
+        }
+      Serial.print(tempC);
+      Serial.print(";");
+      Serial.print(tempCBattery);
+      Serial.print(";");
+      Serial.print(0);
+      //Serial.print(current);
+      Serial.print(";");
+      Serial.print(0);
+      //Serial.print(voltage);
+      Serial.println("#");
+      rpm1count = 0;
+      rpm2count = 0;
+      rpm3count = 0;
+      rpm4count = 0;
+      lastmillis = millis();
+      attachInterrupt(digitalPinToInterrupt(RPM_SENSOR1), rpm_fun1, FALLING);
+      attachInterrupt(digitalPinToInterrupt(RPM_SENSOR2), rpm_fun2, FALLING);
+      attachInterrupt(digitalPinToInterrupt(RPM_SENSOR3), rpm_fun3, FALLING);
+      attachInterrupt(digitalPinToInterrupt(RPM_SENSOR4), rpm_fun4, FALLING);
+    }
+}
