@@ -9,18 +9,22 @@ from datetime import datetime
 import pandas as pd
 import os
 from customtkinter import VERTICAL
+from datetime import datetime, timedelta
 
 #USTAWIENIA OKNA
 app_tk = tkinter.Tk()
 app_tk.geometry("1024x600")
 app_tk.title("PUT POWERTRAIN DYNAMOMETER")
 app_tk.resizable(False, False)
-photobackground = PhotoImage(file="C:/Users/Vest3/Desktop/INŻ/predkosciomierzm3.png")
+photobackground = PhotoImage(file="C:/Users/Vest3/Desktop/INŻ/predkosciomierzm4.png")
 my_canvas = Canvas(app_tk, width=1024, height=600)
 my_canvas.pack(fill='both', expand=True)
 my_canvas.create_image(0,0, image=photobackground, anchor="nw")
 windowStatus = False
-ser = serial.Serial('COM3', 38400)
+try:
+    ser = serial.Serial('COM3', 38400)
+except:
+    print("Nie podłączono Arduino")
 
 #ZMIENNE
 engine_max_speed = 1300 #MAX PRĘDKOŚĆ SILNIKÓW, OSTROŻNIE (MAX OGÓLNY TO 2000)
@@ -36,6 +40,7 @@ voltageBattery = []
 times = []
 frequency = 1
 measuring = False
+
 
 #FUNKCJE POMIARU
 def arduinoReading():
@@ -99,6 +104,9 @@ def startMeasurement():
         measuring = True
         measurment()
         startStopButton.configure(text = 'Stop', fg_color = '#9c1208')
+        timeNow = datetime.now()
+        updateTimeCounter(timeNow)
+        
 
 def clearWidgets():
     clearBattery()
@@ -390,19 +398,19 @@ def updateBatteryStatus(value):
     global batteryCell1, batteryCell2, batteryCell3, batteryCell4
     clearBattery()
     if value < 25:
-        batteryCell1 = my_canvas.create_rectangle(398, 219, 480, 246, fill='green', outline='green')
+        batteryCell1 = my_canvas.create_rectangle(390, 219, 472, 246, fill='green', outline='green')
     elif value >= 25 and value < 50:   
-        batteryCell1 = my_canvas.create_rectangle(398, 219, 480, 246, fill='green', outline='green')
-        batteryCell2 = my_canvas.create_rectangle(398, 185, 480, 212, fill='green', outline='green')
+        batteryCell1 = my_canvas.create_rectangle(390, 219, 472, 246, fill='green', outline='green')
+        batteryCell2 = my_canvas.create_rectangle(390, 185, 472, 212, fill='green', outline='green')
     elif value >= 50 and value < 75:
-        batteryCell1 = my_canvas.create_rectangle(398, 219, 480, 246, fill='green', outline='green')
-        batteryCell2 = my_canvas.create_rectangle(398, 185, 480, 212, fill='green', outline='green')
-        batteryCell3 = my_canvas.create_rectangle(398, 152, 480, 178, fill='green', outline='green')
+        batteryCell1 = my_canvas.create_rectangle(390, 219, 472, 246, fill='green', outline='green')
+        batteryCell2 = my_canvas.create_rectangle(390, 185, 472, 212, fill='green', outline='green')
+        batteryCell3 = my_canvas.create_rectangle(390, 152, 472, 178, fill='green', outline='green')
     elif value >= 75:
-        batteryCell1 = my_canvas.create_rectangle(398, 219, 480, 246, fill='green', outline='green')
-        batteryCell2 = my_canvas.create_rectangle(398, 185, 480, 212, fill='green', outline='green')
-        batteryCell3 = my_canvas.create_rectangle(398, 152, 480, 178, fill='green', outline='green')
-        batteryCell4 = my_canvas.create_rectangle(398, 118, 480, 144, fill='green', outline='green')
+        batteryCell1 = my_canvas.create_rectangle(390, 219, 472, 246, fill='green', outline='green')
+        batteryCell2 = my_canvas.create_rectangle(390, 185, 472, 212, fill='green', outline='green')
+        batteryCell3 = my_canvas.create_rectangle(390, 152, 472, 178, fill='green', outline='green')
+        batteryCell4 = my_canvas.create_rectangle(390, 118, 472, 144, fill='green', outline='green')
 
 def clearBattery():
     global batteryCell1, batteryCell2, batteryCell3, batteryCell4
@@ -420,12 +428,12 @@ def clearDisplay():
     my_canvas.itemconfig(rpmDisplay3, text = '0')
     my_canvas.itemconfig(rpmDisplay4, text = '0')
     my_canvas.itemconfig(tempDisplay1, text = '0°C')
+    tempDisplay1.config(text = '0°C')
     my_canvas.itemconfig(batteryDisplay, text=('0 °C\n'+'0  A\n' + '0  V'))
     arrow1 = change_angle(my_canvas, arrow1, 244, 172, 80, 210)
     arrow2 = change_angle(my_canvas, arrow2, 782, 172, 80, -30)
     arrow3 = change_angle(my_canvas, arrow3, 244, 395, 80, -30)
     arrow4 = change_angle(my_canvas, arrow4, 782, 395, 80, 210)
-
 
 def updateDisplayText():
     my_canvas.itemconfig(rpmDisplay1, text = (rpm1Counts[-1]))
@@ -433,23 +441,37 @@ def updateDisplayText():
     my_canvas.itemconfig(rpmDisplay3, text = (rpm3Counts[-1]))
     my_canvas.itemconfig(rpmDisplay4, text = (rpm4Counts[-1]))
     my_canvas.itemconfig(tempDisplay1, text = (temp1Values[-1] + '°C'))
+    tempDisplay1.config(text = (temp1Values[-1] + '°C'))
     my_canvas.itemconfig(batteryDisplay, text=(tempBatteryValues[-1] + '°C\n') + (currentBattery[-1] +'A\n') + (voltageBattery[-1] +'V'))
 
+def updateTimeCounter(timeStart):
+    timeNow = datetime.now()
+    timePassed = timeNow - timeStart
+    formTime = str(timePassed).split(".")[0]
+    label_time.configure(text=formTime)
+    app_tk.after(1000, updateTimeCounter, timeStart)
+
 rpmDisplay1=my_canvas.create_text(265, 230, text = '0.00', font=("Avenir", 16), fill='white')
-rpmDisplay1r=my_canvas.create_text(265, 250, text = 'rpm', font=("Avenir", 12), fill='white')
+rpmDisplay1r=my_canvas.create_text(265, 250, text = 'obr/min', font=("Avenir", 12), fill='white')
 
 rpmDisplay2=my_canvas.create_text(760, 230, text = '0.00', font=("Avenir", 16), fill='white')
-rpmDisplay2r=my_canvas.create_text(760, 250, text = 'rpm', font=("Avenir", 12), fill='white')
+rpmDisplay2r=my_canvas.create_text(760, 250, text = 'obr/min', font=("Avenir", 12), fill='white')
 
 rpmDisplay3=my_canvas.create_text(220, 455, text = '0.00', font=("Avenir", 16), fill='white')
-rpmDisplay3r=my_canvas.create_text(220, 475, text = 'rpm', font=("Avenir", 12), fill='white')
+rpmDisplay3r=my_canvas.create_text(220, 475, text = 'obr/min', font=("Avenir", 12), fill='white')
 
 rpmDisplay4=my_canvas.create_text(805, 455, text = '0.00', font=("Avenir", 16), fill='white')
-rpmDisplay4r=my_canvas.create_text(805, 475, text = 'rpm', font=("Avenir", 12), fill='white')
+rpmDisplay4r=my_canvas.create_text(805, 475, text = 'obr/min', font=("Avenir", 12), fill='white')
 
-batteryDisplay = my_canvas.create_text(522, 180, text=('0 °C\n'+'0  A\n' + '0  V'), font=("Avenir", 16), fill='white', anchor='w')
+batteryDisplay = customtkinter.CTkLabel(master = app_tk, text = ('SOP: 0%\n' + 'Temp.: 0°C\n'+'Prąd: 0A\n' + 'Napięcie: 0V'), font=("Avenir", 20), fg_color="#363636")
+batteryDisplay.place(relx=0.55, rely=0.3, anchor = CENTER)
 
-tempDisplay1=my_canvas.create_text(512, 330, text = ('0 °C'), font=("Avenir", 20), fill='white')
+
+tempDisplay1=customtkinter.CTkLabel(master = app_tk, text = 'Temperatura otoczenia: 0°C', font=("Avenir", 20), fg_color="#363636")
+tempDisplay1.place(relx=0.5, rely=0.47, anchor = CENTER)
+
+label_time = customtkinter.CTkLabel(master = app_tk, text = "Długość pomiaru: 00:00:00", font=("Avenir", 20), fg_color="#363636")
+label_time.place(relx=0.5, rely=0.8, anchor = CENTER)
 
 # WSKAZANIE PRĘDKOŚCIOMIERZY
 def update_arrows():
@@ -523,9 +545,9 @@ arrow4 = my_canvas.create_polygon(arrow_head, fill='red')
 arrow4 = change_angle(my_canvas, arrow4, 782, 395, 80, 210)
 
 # TWORZENIE POLA LOG
-text_area = customtkinter.CTkTextbox(app_tk, wrap=tkinter.WORD, fg_color='black', text_color='white', width=200, height=100, font=("Avenir", 8))
+text_area = customtkinter.CTkTextbox(app_tk, wrap=tkinter.WORD, fg_color='black', text_color='white', width=240, height=140, font=("Avenir", 8))
 text_area.pack(expand=True, fill=tkinter.BOTH)
-text_area.place(relx=0.5, rely=0.7, anchor=tkinter.CENTER)
+text_area.place(relx=0.5, rely=0.64, anchor=tkinter.CENTER)
 scrollbar = customtkinter.CTkScrollbar(app_tk, command=text_area.yview)
 text_area.configure(yscrollcommand=scrollbar.set)
 
@@ -543,6 +565,6 @@ def on_closing():
     else:
         app_tk.destroy()
         remoteControl_window.destroy()
-
+updateBatteryStatus(70)
 app_tk.protocol("WM_DELETE_WINDOW", on_closing)
 app_tk.mainloop() 
