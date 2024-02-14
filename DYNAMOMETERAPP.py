@@ -16,7 +16,7 @@ app_tk = tkinter.Tk()
 app_tk.geometry("1024x600")
 app_tk.title("PUT POWERTRAIN DYNAMOMETER")
 app_tk.resizable(False, False)
-photobackground = PhotoImage(file="C:/Users/Vest3/Desktop/INŻ/predkosciomierzm4.png")
+photobackground = PhotoImage(file="C:\\Users\\Vest3\\Desktop\\INŻ\\predkosciomierzm4.png")
 my_canvas = Canvas(app_tk, width=1024, height=600)
 my_canvas.pack(fill='both', expand=True)
 my_canvas.create_image(0,0, image=photobackground, anchor="nw")
@@ -74,7 +74,7 @@ def arduinoValuesAllocation():
         text_area.insert(customtkinter.END, rpm1Counts[-1] + ";" + rpm2Counts[-1] + ";" + rpm3Counts[-1] + ";" + rpm4Counts[-1] + ";" + temp1Values[-1] + ";" + tempBatteryValues[-1] + ';' + currentBattery[-1] + ';' + voltageBattery[-1] + ';' + teraz.strftime("%H:%M:%S")+ "\n")
         updateDisplayText()
         update_arrows()
-        updateBatteryStatus(70)
+        updateBatteryStatus(0)
 
 def measurment():
     global measuring
@@ -96,6 +96,9 @@ def stopMeasurement():
 def startMeasurement():
     global ser
     global measuring
+    timeNow = datetime.now()
+
+
     try:
         ser.flushInput()  # Opróżnij bufor portu szeregowego
     except:
@@ -440,15 +443,16 @@ def updateDisplayText():
     my_canvas.itemconfig(rpmDisplay2, text = (rpm2Counts[-1]))
     my_canvas.itemconfig(rpmDisplay3, text = (rpm3Counts[-1]))
     my_canvas.itemconfig(rpmDisplay4, text = (rpm4Counts[-1]))
-    my_canvas.itemconfig(tempDisplay1, text = (temp1Values[-1] + '°C'))
-    tempDisplay1.config(text = (temp1Values[-1] + '°C'))
-    my_canvas.itemconfig(batteryDisplay, text=(tempBatteryValues[-1] + '°C\n') + (currentBattery[-1] +'A\n') + (voltageBattery[-1] +'V'))
-
+    batteryDisplay.configure(text = (tempBatteryValues[-1] + '°C\n' + currentBattery[-1] +'A\n' + voltageBattery[-1] +'V'))
+    #my_canvas.itemconfig(tempDisplay1, text = (temp1Values[-1] + '°C'))
+    tempDisplay1.configure(text = ("Temperatura otoczenia: " + temp1Values[-1] + '°C'))
+    #my_canvas.itemconfig(batteryDisplay, text=(tempBatteryValues[-1] + '°C\n') + (currentBattery[-1] +'A\n') + (voltageBattery[-1] +'V'))
+    
 def updateTimeCounter(timeStart):
     timeNow = datetime.now()
     timePassed = timeNow - timeStart
     formTime = str(timePassed).split(".")[0]
-    label_time.configure(text=formTime)
+    label_time.configure(text='Długość pomiaru: ' + formTime)
     app_tk.after(1000, updateTimeCounter, timeStart)
 
 rpmDisplay1=my_canvas.create_text(265, 230, text = '0.00', font=("Avenir", 16), fill='white')
@@ -463,9 +467,8 @@ rpmDisplay3r=my_canvas.create_text(220, 475, text = 'obr/min', font=("Avenir", 1
 rpmDisplay4=my_canvas.create_text(805, 455, text = '0.00', font=("Avenir", 16), fill='white')
 rpmDisplay4r=my_canvas.create_text(805, 475, text = 'obr/min', font=("Avenir", 12), fill='white')
 
-batteryDisplay = customtkinter.CTkLabel(master = app_tk, text = ('SOP: 0%\n' + 'Temp.: 0°C\n'+'Prąd: 0A\n' + 'Napięcie: 0V'), font=("Avenir", 20), fg_color="#363636")
+batteryDisplay = customtkinter.CTkLabel(master = app_tk, text = ('SOC: 0%\n' + 'Temp.: 0°C\n'+'Prąd: 0A\n' + 'Napięcie: 0V'), font=("Avenir", 20), fg_color="#363636")
 batteryDisplay.place(relx=0.55, rely=0.3, anchor = CENTER)
-
 
 tempDisplay1=customtkinter.CTkLabel(master = app_tk, text = 'Temperatura otoczenia: 0°C', font=("Avenir", 20), fg_color="#363636")
 tempDisplay1.place(relx=0.5, rely=0.47, anchor = CENTER)
@@ -565,6 +568,5 @@ def on_closing():
     else:
         app_tk.destroy()
         remoteControl_window.destroy()
-updateBatteryStatus(70)
 app_tk.protocol("WM_DELETE_WINDOW", on_closing)
 app_tk.mainloop() 
